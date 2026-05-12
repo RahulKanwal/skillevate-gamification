@@ -9,6 +9,18 @@ class GapInput(BaseModel):
     match: str = ""
 
 
+class CourseInput(BaseModel):
+    courseId: str
+    title: str
+    url: str
+    provider: str
+    providerDetail: str = ""
+    description: str = ""
+    targetSkill: str = ""
+    relevanceScore: float = 0.5
+    xp: int = 40
+
+
 class SyncAnalysisRequest(BaseModel):
     resumeId: str
     resumeLabel: str
@@ -16,6 +28,7 @@ class SyncAnalysisRequest(BaseModel):
     matchPercent: int = Field(ge=0, le=100)
     gaps: List[GapInput]
     jobDescription: Optional[str] = ""
+    courses: Optional[List[CourseInput]] = None
 
 
 class RefreshRecommendationsRequest(BaseModel):

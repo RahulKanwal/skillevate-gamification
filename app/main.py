@@ -3,7 +3,6 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from typing import AsyncIterator, Optional
 
-import requests
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -11,11 +10,11 @@ from .auth import current_user_id
 from .config import get_settings
 from .models import (
     CompleteCourseRequest,
+    CourseInput,
     ProgressResponse,
     RefreshRecommendationsRequest,
     SyncAnalysisRequest,
 )
-from .recommendations import fetch_user_recommendations, normalize_user_recommendations
 from .storage import Store
 
 settings = get_settings()
@@ -55,17 +54,21 @@ def get_store() -> Store:
     return _store
 
 
-def _fetch_normalized_courses(user_id: str, analysis_id: str):
-    try:
-        api_response = fetch_user_recommendations(
-            settings.recommendation_api_url, user_id, analysis_id
-        )
-    except requests.RequestException as exc:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Recommendation API request failed: {exc}",
-        ) from exc
-    return normalize_user_recommendations(api_response)
+def _courses_from_input(courses: list[CourseInput]) -> list[dict]:
+    return [
+        {
+            "course_id": c.courseId,
+            "title": c.title,
+            "url": c.url,
+            "provider": c.provider,
+            "provider_detail": c.providerDetail,
+            "description": c.description,
+            "target_skill": c.targetSkill,
+            "relevance_score": c.relevanceScore,
+            "xp": max(40, c.xp),
+        }
+        for c in courses
+    ]
 
 
 @app.get("/health")
@@ -79,7 +82,7 @@ def sync_analysis(
     user_id: str = Depends(current_user_id),
     store: Store = Depends(get_store),
 ):
-    courses = _fetch_normalized_courses(user_id, request.analysisId)
+    courses = _courses_from_input(request.courses) if request.courses is not None else []
     store.upsert_path(
         user_id=user_id,
         resume_id=request.resumeId,
