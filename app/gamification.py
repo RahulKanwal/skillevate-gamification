@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List
 
-BASE_XP = 1200
+BASE_XP = 0
 NEXT_LEVEL_XP = 2000
 
 
