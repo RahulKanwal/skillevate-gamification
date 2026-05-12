@@ -33,15 +33,26 @@ def compute_streak(activities: List[Dict]) -> int:
 
 def compute_level(total_xp: int) -> int:
     if total_xp >= 1800:
-        return 5
-    if total_xp >= 1200:
         return 4
-    if total_xp >= 600:
+    if total_xp >= 1200:
         return 3
+    if total_xp >= 600:
+        return 2
     return 1
 
 
-def achievements(completed_count: int, total_xp: int, match_percent: int, streak: int = 0) -> List[Dict[str, object]]:
+def next_level_xp(total_xp: int) -> int:
+    """Return the XP threshold for the next tier (the ceiling of the current tier)."""
+    if total_xp >= 1800:
+        return 1800  # already at max tier
+    if total_xp >= 1200:
+        return 1800
+    if total_xp >= 600:
+        return 1200
+    return 600
+
+
+def achievements(completed_count: int, match_percent: int, streak: int = 0) -> List[Dict[str, object]]:
     return [
         {
             "id": "first-gap-closed",

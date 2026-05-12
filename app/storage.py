@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Tuple
 from pymongo import ASCENDING, MongoClient
 from pymongo.collection import Collection
 
-from .gamification import BASE_XP, NEXT_LEVEL_XP, achievements, compute_level, compute_streak
+from .gamification import BASE_XP, achievements, compute_level, compute_streak, next_level_xp
 from .models import GapInput, ProgressResponse
 
 
@@ -250,7 +250,7 @@ class Store:
             baseXp=BASE_XP,
             totalXp=total_xp,
             level=compute_level(total_xp),
-            nextLevelXp=NEXT_LEVEL_XP,
+            nextLevelXp=next_level_xp(total_xp),
             courses=[
                 {
                     "courseId": c["course_id"],
@@ -268,7 +268,7 @@ class Store:
                 }
                 for c in courses
             ],
-            achievements=achievements(completed_count, total_xp, match_percent, streak),
+            achievements=achievements(completed_count, match_percent, streak),
             currentStreak=streak,
             recentActivity=[
                 {
