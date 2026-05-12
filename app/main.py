@@ -7,6 +7,7 @@ import requests
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
+from .auth import current_user_id
 from .config import get_settings
 from .models import (
     CompleteCourseRequest,
@@ -75,11 +76,12 @@ def health():
 @app.post("/api/gamification/sync-analysis", response_model=ProgressResponse)
 def sync_analysis(
     request: SyncAnalysisRequest,
+    user_id: str = Depends(current_user_id),
     store: Store = Depends(get_store),
 ):
-    courses = _fetch_normalized_courses(request.userId, request.analysisId)
+    courses = _fetch_normalized_courses(user_id, request.analysisId)
     store.upsert_path(
-        user_id=request.userId,
+        user_id=user_id,
         resume_id=request.resumeId,
         resume_label=request.resumeLabel,
         analysis_id=request.analysisId,
@@ -88,18 +90,18 @@ def sync_analysis(
         job_description=request.jobDescription or "",
         courses=courses,
     )
-    return store.progress(request.userId, request.resumeId, request.analysisId)
+    return store.progress(user_id, request.resumeId, request.analysisId)
 
 
 @app.get("/api/gamification/progress", response_model=ProgressResponse)
 def progress(
-    userId: str,
     resumeId: str,
     analysisId: str,
+    user_id: str = Depends(current_user_id),
     store: Store = Depends(get_store),
 ):
     try:
-        return store.progress(userId, resumeId, analysisId)
+        return store.progress(user_id, resumeId, analysisId)
     except KeyError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Gamification path not found"
@@ -110,10 +112,11 @@ def progress(
 def complete_course(
     course_id: str,
     request: CompleteCourseRequest,
+    user_id: str = Depends(current_user_id),
     store: Store = Depends(get_store),
 ):
     try:
-        return store.complete_course(request.userId, request.resumeId, request.analysisId, course_id)
+        return store.complete_course(user_id, request.resumeId, request.analysisId, course_id)
     except PermissionError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     except KeyError as exc:
@@ -123,15 +126,16 @@ def complete_course(
 @app.post("/api/gamification/refresh-recommendations", response_model=ProgressResponse)
 def refresh_recommendations(
     request: RefreshRecommendationsRequest,
+    user_id: str = Depends(current_user_id),
     store: Store = Depends(get_store),
 ):
     try:
-        store.progress(request.userId, request.resumeId, request.analysisId)
+        store.progress(user_id, request.resumeId, request.analysisId)
     except KeyError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Gamification path not found"
         ) from exc
 
-    courses = _fetch_normalized_courses(request.userId, request.analysisId)
-    store.refresh_courses(request.userId, request.resumeId, request.analysisId, courses)
-    return store.progress(request.userId, request.resumeId, request.analysisId)
+    courses = _fetch_normalized_courses(user_id, request.analysisId)
+    store.refresh_courses(user_id, request.resumeId, request.analysisId, courses)
+    return store.progress(user_id, request.resumeId, request.analysisId)

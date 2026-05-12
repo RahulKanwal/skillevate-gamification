@@ -10,7 +10,6 @@ class GapInput(BaseModel):
 
 
 class SyncAnalysisRequest(BaseModel):
-    userId: str
     resumeId: str
     resumeLabel: str
     analysisId: str
@@ -20,13 +19,11 @@ class SyncAnalysisRequest(BaseModel):
 
 
 class RefreshRecommendationsRequest(BaseModel):
-    userId: str
     resumeId: str
     analysisId: str
 
 
 class CompleteCourseRequest(BaseModel):
-    userId: str
     resumeId: str
     analysisId: str
 
