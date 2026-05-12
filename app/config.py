@@ -13,6 +13,8 @@ class Settings:
     mongodb_uri: str
     mongodb_database: str
     cors_origins: List[str]
+    auth0_domain: str
+    auth0_audience: str
 
 
 def _split_csv(value: str) -> List[str]:
@@ -30,4 +32,6 @@ def get_settings() -> Settings:
         cors_origins=_split_csv(
             os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:3002")
         ),
+        auth0_domain=os.getenv("AUTH0_DOMAIN", ""),
+        auth0_audience=os.getenv("AUTH0_AUDIENCE", ""),
     )
